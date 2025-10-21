@@ -1,0 +1,36 @@
+-----------------------------------------------------------------------
+G2 datasets creation
+-----------------------------------------------------------------------
+
+The datasets include two Gaussian normal distributions:
+
+Dataset name:    G2-dim-sd
+Centroid 1:      [500,500, ...]
+Centroid 2:      [600,600, ...]
+Dimensions:      dim = 1,2,4,8,16, ... 1024
+St.Dev:          sd  = 10,20,30,40 ... 100
+
+They have been created using the following C-language code:
+
+Calculate random value in (0,1]:
+
+  U = (double)(rand()+1)/(double)(RAND_MAX+1);
+  V = (double)(rand()+1)/(double)(RAND_MAX+1);
+
+Box-Muller method to create two independent standard 
+one-dimensional Gaussian samples:
+
+  X = sqrt(-2*log(U))*cos(2*3.14159*V);  /* pi = 3.14159 */  
+  Y = sqrt(-2*log(U))*sin(2*3.14159*V);
+
+Adjust mean and deviation:
+
+  X_final = 500 + s * X;    /* mean + deviation * X */
+  Y_final = 600 + s * Y;
+
+The points are stored in the files so that:
+- First 1024 points are from the cluster 1
+- Rest  1024 points are from the cluster 2
+
+-----------------------------------------------------------------------
+
