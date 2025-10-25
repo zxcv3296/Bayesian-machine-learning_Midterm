@@ -15,49 +15,45 @@ Gaussian Mixture Model (GMM) - EM / Gibbs / Variational Inference
 ------------------------------------------------------------------
 프로젝트 루트 구조:
 
-project/
+project  
 ├─ **common/**  
 │   ├─ `io_utils.py` : 데이터 로드, Z-score 표준화 함수  
 │   ├─ `metrics.py` : 로그우도(LL), AIC/BIC, Purity, ARI, NMI 계산  
 │   ├─ `utils.py` : 수학적 유틸리티 (logsumexp, mvn_logpdf 등)  
 │   └─ `viz.py` : 산점도+가우시안 타원, 수렴 곡선 시각화 함수  
-│
+│  
 ├─ **data/**  
 │   ├─ `G2.txt` : 기본 2D 데이터셋 (2개의 가우시안 모드)  
 │   ├─ `g2-*.txt` : 추가 샘플 데이터 (다양한 N, 분산비율)  
 │   └─ `g2-txt.zip` : 데이터 묶음 압축본  
-│
+│  
 ├─ **em/**  
 │   └─ `gmm_em.py` : EM 알고리즘 전체 구현 스크립트  
 │        - 로그우도 기반 수렴 판단  
 │        - AIC/BIC 계산 포함  
 │        - Purity/ARI/NMI 측정  
 │        - 결과: `runs/em_K*.png`, `runs/em_ll_K*.png`, `.npz` 저장  
-│
+│  
 ├─ **gibbs/**  
 │   └─ `gmm_gibbs.py` : 비공분산(Gibbs Sampler) 기반 베이지안 GMM  
 │        - Dirichlet–Normal–Inverse–Wishart 사전분포 사용  
 │        - Burn-in, Thin 설정 가능  
 │        - 결과: `runs/gibbs_K*.png`, `.npz`  
-│
+│  
 ├─ **vi/**  
 │   └─ `gmm_vi.py` : Variational Inference 기반 근사 추론  
 │        - ELBO 수렴곡선 기록  
 │        - 결과: `runs/vi_K*.png`, `runs/vi_elbo_K*.png`, `.npz`  
-│
+│  
 ├─ **runs/**  
 │   ├─ `*_K*.png` : 각 방법별 클러스터 시각화 결과  
 │   ├─ `*_ll_K*.png`, `vi_elbo_K*.png` : 수렴 곡선 (LL 또는 ELBO)  
 │   └─ `*.npz` : 학습된 파라미터 (π, μ, Σ 등) 저장  
-│
-├─ **notebooks/**  
-│   ├─ `00_quick_look.ipynb` : 데이터 분포 및 초기 시각화  
-│   └─ `99_compare_K.ipynb` : K=1~4 결과 비교 (BIC/ELBO 등)  
-│
+│  
 ├─ **scripts/**  
 │   ├─ `quick_look.py` : 데이터 구조 빠른 확인용  
 │   └─ `sweep_k.py` : 여러 K 값 반복 실험 자동화 스크립트  
-│
+│  
 └─ **env.yml** : Conda 환경 설정 파일 (NumPy, Matplotlib 등 포함)
 
 
@@ -106,23 +102,6 @@ python vi/gmm_vi.py --data data/G2.txt --K 2   --max_iter 500 --tol 1e-6 --seed 
 - 수렴 속도 빠르고 안정적  
 - 결과 파일: `vi_K*.png`, `vi_elbo_K*.png`
 
-------------------------------------------------------------------
-🔍 분석자가 봐야 하는 핵심 부분
-------------------------------------------------------------------
-- `runs/` 폴더:
-  - `*_K*.png` : 클러스터링 시각적 비교 (K=1~4)
-  - `em_ll_K*.png` / `vi_elbo_K*.png` : 수렴 곡선 비교
-  - `.npz` 파일: 학습된 파라미터 저장 (추가분석 가능)
-
-- `notebooks/99_compare_K.ipynb` :
-  - K별 BIC/ELBO/ARI/Purity 비교 그래프 포함
-  - 최적 K=2 도출 확인 가능
-
-- `common/metrics.py` :
-  - Purity, ARI, NMI 등 계산 함수 직접 구현되어 있음
-
-- `common/viz.py` :
-  - 산점도 + 1/2/3σ 가우시안 타원 시각화 핵심 코드 포함
 
 ------------------------------------------------------------------
 📑 결과 요약 (K=2, seed=42)
