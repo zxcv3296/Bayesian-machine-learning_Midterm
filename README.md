@@ -1,100 +1,143 @@
 Gaussian Mixture Model (GMM) - EM / Gibbs / Variational Inference
 ==================================================================
 
-This repository contains from-scratch NumPy implementations of Gaussian Mixture Model (GMM) learning using:
-1. Expectation-Maximization (EM)
-2. Gibbs Sampling
-3. Variational Inference (VI)
+📘 개요
+------------------------------------------------------------------
+이 저장소는 **NumPy만을 사용하여** Gaussian Mixture Model(GMM)을 세 가지 방식으로 학습하는 실험을 다룹니다.
+1. **EM (Expectation–Maximization)** — 최대우도 추정 기반
+2. **Gibbs Sampling** — 완전 베이지안 사후 샘플링
+3. **Variational Inference (VI)** — 근사 추론 (ELBO 최적화)
+
+각 방법은 `data/G2.txt` 2차원 가우시안 데이터셋을 대상으로 실험되었습니다.
 
 ------------------------------------------------------------------
-1. Environment Setup
+📂 폴더 구조 및 파일 설명
 ------------------------------------------------------------------
-Required Packages:
-- Python >= 3.10
-- NumPy
-- Matplotlib
+프로젝트 루트 구조:
 
-Install via conda:
-    conda env create -f env.yml
-    conda activate gmm-g2
-
-------------------------------------------------------------------
-2. Folder Structure
-------------------------------------------------------------------
 project/
-├─ data/
-│  └─ G2.txt
-├─ common/
-│  ├─ io_utils.py
-│  ├─ metrics.py
-│  ├─ utils.py
-│  └─ viz.py
-├─ em/
-│  └─ gmm_em.py
-├─ gibbs/
-│  └─ gmm_gibbs.py
-├─ vi/
-│  └─ gmm_vi.py
-├─ runs/
-│  └─ output images and npz results
-└─ notebooks/
-   ├─ 00_quick_look.ipynb
-   └─ 99_compare_K.ipynb
+├─ **common/**  
+│   ├─ `io_utils.py` : 데이터 로드, Z-score 표준화 함수  
+│   ├─ `metrics.py` : 로그우도(LL), AIC/BIC, Purity, ARI, NMI 계산  
+│   ├─ `utils.py` : 수학적 유틸리티 (logsumexp, mvn_logpdf 등)  
+│   └─ `viz.py` : 산점도+가우시안 타원, 수렴 곡선 시각화 함수  
+│
+├─ **data/**  
+│   ├─ `G2.txt` : 기본 2D 데이터셋 (2개의 가우시안 모드)  
+│   ├─ `g2-*.txt` : 추가 샘플 데이터 (다양한 N, 분산비율)  
+│   └─ `g2-txt.zip` : 데이터 묶음 압축본  
+│
+├─ **em/**  
+│   └─ `gmm_em.py` : EM 알고리즘 전체 구현 스크립트  
+│        - 로그우도 기반 수렴 판단  
+│        - AIC/BIC 계산 포함  
+│        - Purity/ARI/NMI 측정  
+│        - 결과: `runs/em_K*.png`, `runs/em_ll_K*.png`, `.npz` 저장  
+│
+├─ **gibbs/**  
+│   └─ `gmm_gibbs.py` : 비공분산(Gibbs Sampler) 기반 베이지안 GMM  
+│        - Dirichlet–Normal–Inverse–Wishart 사전분포 사용  
+│        - Burn-in, Thin 설정 가능  
+│        - 결과: `runs/gibbs_K*.png`, `.npz`  
+│
+├─ **vi/**  
+│   └─ `gmm_vi.py` : Variational Inference 기반 근사 추론  
+│        - ELBO 수렴곡선 기록  
+│        - 결과: `runs/vi_K*.png`, `runs/vi_elbo_K*.png`, `.npz`  
+│
+├─ **runs/**  
+│   ├─ `*_K*.png` : 각 방법별 클러스터 시각화 결과  
+│   ├─ `*_ll_K*.png`, `vi_elbo_K*.png` : 수렴 곡선 (LL 또는 ELBO)  
+│   └─ `*.npz` : 학습된 파라미터 (π, μ, Σ 등) 저장  
+│
+├─ **notebooks/**  
+│   ├─ `00_quick_look.ipynb` : 데이터 분포 및 초기 시각화  
+│   └─ `99_compare_K.ipynb` : K=1~4 결과 비교 (BIC/ELBO 등)  
+│
+├─ **scripts/**  
+│   ├─ `quick_look.py` : 데이터 구조 빠른 확인용  
+│   └─ `sweep_k.py` : 여러 K 값 반복 실험 자동화 스크립트  
+│
+└─ **env.yml** : Conda 환경 설정 파일 (NumPy, Matplotlib 등 포함)
+
 
 ------------------------------------------------------------------
-3. Execution Examples
+🚀 실행 및 분석 가이드
 ------------------------------------------------------------------
+1️⃣ **환경 설정**
+```bash
+conda env create -f env.yml
+conda activate gmm-g2
+```
 
-EM Algorithm:
---------------
-python em/gmm_em.py --data data/G2.txt --K 2 \
-  --max_iter 200 --tol 1e-6 --seed 42 \
-  --plot_out runs/em_K2.png --curve_out runs/em_ll_K2.png \
-  --save_params runs/em_K2.npz --standardize 0
+2️⃣ **EM 실행 예시**
+```bash
+python em/gmm_em.py --data data/G2.txt --K 2   --max_iter 200 --tol 1e-6 --seed 42   --plot_out runs/em_K2.png --curve_out runs/em_ll_K2.png   --save_params runs/em_K2.npz --standardize 0
+```
 
-Gibbs Sampling:
----------------
-python gibbs/gmm_gibbs.py --data data/G2.txt --K 2 \
-  --burnin 500 --iters 2000 --thin 5 --seed 42 --standardize 0 \
-  --plot_out runs/gibbs_K2.png --save_params runs/gibbs_K2.npz
+3️⃣ **Gibbs 실행 예시**
+```bash
+python gibbs/gmm_gibbs.py --data data/G2.txt --K 2   --burnin 500 --iters 2000 --thin 5 --seed 42 --standardize 0   --plot_out runs/gibbs_K2.png --save_params runs/gibbs_K2.npz
+```
 
-Variational Inference:
-----------------------
-python vi/gmm_vi.py --data data/G2.txt --K 2 \
-  --max_iter 500 --tol 1e-6 --seed 42 --standardize 0 \
-  --plot_out runs/vi_K2.png --curve_out runs/vi_elbo_K2.png \
-  --save_params runs/vi_K2.npz
+4️⃣ **VI 실행 예시**
+```bash
+python vi/gmm_vi.py --data data/G2.txt --K 2   --max_iter 500 --tol 1e-6 --seed 42 --standardize 0   --plot_out runs/vi_K2.png --curve_out runs/vi_elbo_K2.png   --save_params runs/vi_K2.npz
+```
 
-------------------------------------------------------------------
-4. Results
-------------------------------------------------------------------
-K values tested: 1~4  
-Metrics (for K=2 example):
-- EM  : LL=-22812.15  Purity=0.917  ARI=0.695  NMI=0.587
-- Gibbs: LL_mean=-28610.33  Purity=0.917  ARI=0.695  NMI=0.587
-- VI  : ELBO=41068.09  Purity=0.917  ARI=0.695  NMI=0.587
-
-Visualizations saved in `runs/`:
-- em_K*.png, gibbs_K*.png, vi_K*.png  → Cluster plots
-- em_ll_K*.png, vi_elbo_K*.png        → Convergence curves
 
 ------------------------------------------------------------------
-5. Notes
+📊 결과 해석 포인트
 ------------------------------------------------------------------
-- All implementations use only NumPy (no scikit-learn or scipy).
-- Random seeds are fixed for reproducibility.
-- Results verified on dataset G2 (two Gaussian clusters).
-- Figures show convergence and posterior separation quality for each method.
+📈 **EM (Expectation–Maximization)**  
+- 점추정 기반 (MLE)  
+- 로그우도(LL)가 단조 증가하며 수렴  
+- BIC 최소값으로 최적 K 결정  
+- 결과 파일: `em_K*.png`, `em_ll_K*.png`
+
+🔥 **Gibbs Sampling**  
+- 사후분포 샘플링 기반 불확실성 반영  
+- Burn-in 이후 수집한 샘플 평균으로 추정  
+- 결과 파일: `gibbs_K*.png`  
+- LL_mean은 EM의 LL과 절대 비교 불가 (다른 척도)
+
+🧠 **Variational Inference (VI)**  
+- 근사 추론 기반 (ELBO 최대화)  
+- 수렴 속도 빠르고 안정적  
+- 결과 파일: `vi_K*.png`, `vi_elbo_K*.png`
 
 ------------------------------------------------------------------
-6. Quick Git Commands
+🔍 분석자가 봐야 하는 핵심 부분
 ------------------------------------------------------------------
-git add README.txt
-git commit -m "Add README.txt"
-git push
+- `runs/` 폴더:
+  - `*_K*.png` : 클러스터링 시각적 비교 (K=1~4)
+  - `em_ll_K*.png` / `vi_elbo_K*.png` : 수렴 곡선 비교
+  - `.npz` 파일: 학습된 파라미터 저장 (추가분석 가능)
+
+- `notebooks/99_compare_K.ipynb` :
+  - K별 BIC/ELBO/ARI/Purity 비교 그래프 포함
+  - 최적 K=2 도출 확인 가능
+
+- `common/metrics.py` :
+  - Purity, ARI, NMI 등 계산 함수 직접 구현되어 있음
+
+- `common/viz.py` :
+  - 산점도 + 1/2/3σ 가우시안 타원 시각화 핵심 코드 포함
 
 ------------------------------------------------------------------
-Author
+📑 결과 요약 (K=2, seed=42)
 ------------------------------------------------------------------
-건호 (Ewha Womans University)
-2025
+- EM:    LL = -22812.15,  Purity = 0.9170,  ARI = 0.6954,  NMI = 0.5873
+- Gibbs: LL_mean = -28610.33, 동일 Purity/ARI/NMI
+- VI:    ELBO = 41068.09, 동일 Purity/ARI/NMI
+→ 세 방법 모두 동일한 군집 구조 도출, K=2가 최적.
+
+------------------------------------------------------------------
+🧩 참고 사항
+------------------------------------------------------------------
+- 모든 구현은 NumPy만 사용 (SciPy, scikit-learn, OpenCV 없음)
+- 실행 시 생성된 `.npz` 파일에는 학습된 π, μ, Σ 저장됨
+- plots는 자동 저장 (runs/)
+
+
+
